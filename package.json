@@ -2,7 +2,9 @@
   "type": "module",
   "packageManager": "pnpm@9.12.2",
   "scripts": {
-    "dev": "tsx src/index.ts",
+    "dev": "tsx src/commands/chat.ts",
+    "chat": "tsx src/commands/chat.ts",
+    "schedule": "tsx src/schedule.ts",
     "cmd": "tsx scripts/cmd.ts",
     "postinstall": "tsx scripts/postinstall.ts",
     "lint": "eslint ."
@@ -18,6 +20,7 @@
     "@antfu/eslint-config": "^4.12.0",
     "@types/node": "^22.15.21",
     "@types/ws": "^8.18.1",
+    "cron": "^4.4.0",
     "dotenv": "^17.2.3",
     "eslint": "^9.25.1",
     "tsx": "^4.19.3",

@@ -169,7 +169,7 @@ export async function sendMessage({ message, sessionId, sessionType }: MessagePa
   })
 }
 
-async function run() {
+export async function run() {
   try {
     const questions = await getDailyQuestions()
     const questionCount = Number.parseInt(process.env.QUESTION_COUNT || '1', 10)
@@ -205,5 +205,3 @@ async function run() {
     console.error(c.red('✗') + c.bold(' 脚本执行出错:'), error)
   }
 }
-
-run()
