@@ -1,0 +1,26 @@
+{
+  "type": "module",
+  "packageManager": "pnpm@9.12.2",
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "cmd": "tsx scripts/cmd.ts",
+    "postinstall": "tsx scripts/postinstall.ts",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "axios": "^1.8.4",
+    "ora": "^9.2.0",
+    "p-limit": "^6.2.0",
+    "picocolors": "^1.1.1",
+    "ws": "^8.19.0"
+  },
+  "devDependencies": {
+    "@antfu/eslint-config": "^4.12.0",
+    "@types/node": "^22.15.21",
+    "@types/ws": "^8.18.1",
+    "dotenv": "^17.2.3",
+    "eslint": "^9.25.1",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.3"
+  }
+}
