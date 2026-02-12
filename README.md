@@ -73,27 +73,6 @@ pnpm dev
 pnpm schedule
 ```
 
-## 工作流程
-
-1. **获取新闻源**：
-   - CryptoCompare：获取最新区块链新闻（英文）
-   - PANews：获取中文区块链资讯
-   - Reddit r/CryptoCurrency：获取热门讨论帖
-
-2. **LLM 生成问题**：
-   - 将新闻摘要发送给 LLM
-   - LLM 分析热点并生成指定数量的问题
-   - 根据 `QUESTION_COUNT_RANGE` 随机确定提问数量
-
-3. **批量提问**：
-   - 依次向 Surf AI 提问生成的问题
-   - 实时显示 AI 思考过程和回答
-   - 根据 `QUESTION_INTERVAL_RANGE` 在问题间随机等待
-
-4. **自动维护**：
-   - 智能检测 Token 过期
-   - 自动刷新 Token 并更新 `.env` 文件
-
 ## License
 
 MIT
