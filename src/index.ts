@@ -1,19 +1,18 @@
 import type { Buffer } from 'node:buffer'
+import type { MessagePayload, NewsItem, SessionType } from './types'
 import process from 'node:process'
 import ora from 'ora'
 import c from 'picocolors'
 import WebSocket from 'ws'
-import { getDailyQuestions, getToken } from './api'
-import { generateRequestId, generateSessionId, isTokenExpiringSoon, updateToken } from './utils'
+import { fetchCryptoCompare, fetchPANews, fetchReddit, generateHotQuestions, getToken } from './api'
+import {
+  generateRequestId,
+  generateSessionId,
+  getRandomElementFromArray,
+  isTokenExpiringSoon,
+  updateToken,
+} from './utils'
 import 'dotenv/config'
-
-type SessionType = 'V2' | 'V2_INSTANT' | 'V2_THINKING'
-
-interface MessagePayload {
-  message: string
-  sessionId: string
-  sessionType: SessionType
-}
 
 async function getAccessToken() {
   let token = process.env.ACCESS_TOKEN!
@@ -25,6 +24,57 @@ async function getAccessToken() {
     await updateToken(accessToken, refreshToken)
   }
   return token
+}
+
+async function getDailyQuestions(count = 1): Promise<string[]> {
+  const date = new Date().toISOString().split('T')[0]
+  console.log(c.cyan(`\n📡 区块链每日热点问题搜集 — ${date}\n`))
+  const allNews: NewsItem[] = []
+
+  try {
+    console.log(c.gray('  → 获取 CryptoCompare 新闻...'))
+    const news = await fetchCryptoCompare(20)
+    allNews.push(...news)
+    console.log(c.green(`  ✓ CryptoCompare: ${news.length} 篇`))
+  }
+  catch {
+    console.log(c.yellow('  ⚠ CryptoCompare 新闻获取失败，跳过'))
+  }
+
+  try {
+    console.log(c.gray('  → 获取 PANews 新闻...'))
+    const paNews = await fetchPANews(20)
+    allNews.push(...paNews)
+    console.log(c.green(`  ✓ PANews: ${paNews.length} 篇`))
+  }
+  catch {
+    console.log(c.yellow('  ⚠ PANews 新闻获取失败，跳过'))
+  }
+
+  try {
+    console.log(c.gray('  → 获取 Reddit 热门帖子...'))
+    const reddit = await fetchReddit(20)
+    allNews.push(...reddit)
+    console.log(c.green(`  ✓ Reddit: ${reddit.length} 篇`))
+  }
+  catch {
+    console.log(c.yellow('  ⚠ Reddit 帖子获取失败，跳过'))
+  }
+
+  if (allNews.length === 0) {
+    throw new Error('所有新闻源获取均失败，无法生成热点问题')
+  }
+
+  console.log(c.bold(c.white(`  📰 共获取 ${allNews.length} 篇新闻/帖子`)))
+
+  console.log(c.gray(`  → 调用 LLM 生成 ${count} 个热点问题...`))
+  const apiKey = process.env.LLM_API_KEY!
+  const baseURL = process.env.LLM_API_BASE_URL || 'https://api.openai.com/v1'
+  const model = process.env.LLM_MODEL || 'gpt-4o'
+  const questions = await generateHotQuestions({ apiKey, baseURL, model }, allNews, count)
+  console.log(c.green(`  ✓ 生成 ${questions.length} 个热点问题\n`))
+
+  return questions
 }
 
 export async function sendMessage({ message, sessionId, sessionType }: MessagePayload) {
@@ -171,19 +221,26 @@ export async function sendMessage({ message, sessionId, sessionType }: MessagePa
 
 export async function run() {
   try {
-    const questions = await getDailyQuestions()
-    const questionCount = Number.parseInt(process.env.QUESTION_COUNT || '1', 10)
-    const questionsToAsk = questions.slice(0, questionCount)
+    const [minCount, maxCount] = (process.env.QUESTION_COUNT_RANGE || '1,1')
+      .split(',')
+      .map(s => Number.parseInt(s.trim(), 10))
+    const questionCount = getRandomElementFromArray(
+      Array.from({ length: maxCount - minCount + 1 }, (_, i) => i + minCount),
+    )
+    const questions = await getDailyQuestions(questionCount)
+    const [minInterval, maxInterval] = (process.env.QUESTION_INTERVAL_RANGE || '0,0')
+      .split(',')
+      .map(s => Number.parseInt(s.trim(), 10))
 
     console.log()
     console.log(c.bold(c.cyan('=== Surf AI 聊天 ===')))
-    console.log(c.dim(`共 ${questionsToAsk.length} 个问题`))
+    console.log(c.dim(`共 ${questions.length} 个问题`))
 
-    for (let i = 0; i < questionsToAsk.length; i++) {
-      const question = questionsToAsk[i]
+    for (let i = 0; i < questions.length; i++) {
+      const question = questions[i]
 
       console.log()
-      console.log(c.bold(c.blue(`--- 问题 ${i + 1}/${questionsToAsk.length} ---`)))
+      console.log(c.bold(c.blue(`--- 问题 ${i + 1}/${questions.length} ---`)))
       console.log(c.yellow('❓') + c.bold(' 问题: ') + c.dim(question))
       console.log()
 
@@ -197,6 +254,16 @@ export async function run() {
       console.log(c.bold(c.green('=== 回答 ===')))
       console.log(response)
       console.log()
+
+      if (i < questions.length - 1) {
+        const waitMinutes = getRandomElementFromArray(
+          Array.from({ length: maxInterval - minInterval + 1 }, (_, idx) => idx + minInterval),
+        )
+        if (waitMinutes > 0) {
+          console.log(c.dim(`⏳ 等待 ${waitMinutes} 分钟后继续...`))
+          await new Promise(resolve => setTimeout(resolve, waitMinutes * 60 * 1000))
+        }
+      }
     }
 
     console.log(c.bold(c.green('✓ 所有问题已完成')))
