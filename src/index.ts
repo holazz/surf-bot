@@ -10,6 +10,7 @@ import {
   generateSessionId,
   getRandomElementFromArray,
   isTokenExpiringSoon,
+  retry,
   updateToken,
 } from './utils'
 import 'dotenv/config'
@@ -33,7 +34,7 @@ async function getDailyQuestions(count = 1): Promise<string[]> {
 
   try {
     console.log(c.gray('  → 获取 CryptoCompare 新闻...'))
-    const news = await fetchCryptoCompare(20)
+    const news = await retry(fetchCryptoCompare, 3)(20)
     allNews.push(...news)
     console.log(c.green(`  ✓ CryptoCompare: ${news.length} 篇`))
   }
@@ -43,7 +44,7 @@ async function getDailyQuestions(count = 1): Promise<string[]> {
 
   try {
     console.log(c.gray('  → 获取 PANews 新闻...'))
-    const paNews = await fetchPANews(20)
+    const paNews = await retry(fetchPANews, 3)(20)
     allNews.push(...paNews)
     console.log(c.green(`  ✓ PANews: ${paNews.length} 篇`))
   }
@@ -53,7 +54,7 @@ async function getDailyQuestions(count = 1): Promise<string[]> {
 
   try {
     console.log(c.gray('  → 获取 Reddit 热门帖子...'))
-    const reddit = await fetchReddit(20)
+    const reddit = await retry(fetchReddit, 3)(20)
     allNews.push(...reddit)
     console.log(c.green(`  ✓ Reddit: ${reddit.length} 篇`))
   }
