@@ -34,7 +34,7 @@ async function getDailyQuestions(count = 1): Promise<string[]> {
 
   try {
     console.log(c.gray('  → 获取 CryptoCompare 新闻...'))
-    const news = await retry(fetchCryptoCompare, 3)(20)
+    const news = await retry(fetchCryptoCompare, 3)(50)
     allNews.push(...news)
     console.log(c.green(`  ✓ CryptoCompare: ${news.length} 篇`))
   }
@@ -44,7 +44,7 @@ async function getDailyQuestions(count = 1): Promise<string[]> {
 
   try {
     console.log(c.gray('  → 获取 PANews 新闻...'))
-    const paNews = await retry(fetchPANews, 3)(20)
+    const paNews = await retry(fetchPANews, 3)(50)
     allNews.push(...paNews)
     console.log(c.green(`  ✓ PANews: ${paNews.length} 篇`))
   }
@@ -54,7 +54,7 @@ async function getDailyQuestions(count = 1): Promise<string[]> {
 
   try {
     console.log(c.gray('  → 获取 Reddit 热门帖子...'))
-    const reddit = await retry(fetchReddit, 3)(20)
+    const reddit = await retry(fetchReddit, 3)(50)
     allNews.push(...reddit)
     console.log(c.green(`  ✓ Reddit: ${reddit.length} 篇`))
   }
@@ -72,7 +72,7 @@ async function getDailyQuestions(count = 1): Promise<string[]> {
   const apiKey = process.env.LLM_API_KEY!
   const baseURL = process.env.LLM_API_BASE_URL || 'https://api.openai.com/v1'
   const model = process.env.LLM_MODEL || 'gpt-4o'
-  const questions = await generateHotQuestions({ apiKey, baseURL, model }, allNews, count)
+  const questions = await retry(generateHotQuestions, 3)({ apiKey, baseURL, model }, allNews, count)
   console.log(c.green(`  ✓ 生成 ${questions.length} 个热点问题\n`))
 
   return questions
@@ -228,7 +228,8 @@ export async function run() {
     const questionCount = getRandomElementFromArray(
       Array.from({ length: maxCount - minCount + 1 }, (_, i) => i + minCount),
     )
-    const questions = await getDailyQuestions(questionCount)
+    const allQuestions = await getDailyQuestions(questionCount * 10)
+    const questions = getRandomElementFromArray(allQuestions, questionCount)
     const [minInterval, maxInterval] = (process.env.QUESTION_INTERVAL_RANGE || '0,0')
       .split(',')
       .map(s => Number.parseInt(s.trim(), 10))
