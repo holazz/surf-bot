@@ -4,7 +4,17 @@ import process from 'node:process'
 import ora from 'ora'
 import c from 'picocolors'
 import WebSocket from 'ws'
-import { fetchCryptoCompare, fetchPANews, fetchReddit, generateHotQuestions, getToken } from './api'
+import {
+  fetchCryptoCompare,
+  fetchPANews,
+  fetchReddit,
+  generateHotQuestions,
+  getChatHistory,
+  getSessions,
+  getToken,
+  shareChat,
+  shareImage,
+} from './api'
 import {
   generateRequestId,
   generateSessionId,
@@ -246,9 +256,10 @@ export async function run() {
       console.log(c.yellow('❓') + c.bold(' 问题: ') + c.dim(question))
       console.log()
 
+      const sessionId = generateSessionId()
       const response = await sendMessage({
         message: question,
-        sessionId: generateSessionId(),
+        sessionId,
         sessionType: (process.env.SESSION_TYPE as SessionType) || 'V2',
       })
 
@@ -256,6 +267,15 @@ export async function run() {
       console.log(c.bold(c.green('=== 回答 ===')))
       console.log(response)
       console.log()
+
+      console.log(c.gray('  → 获取聊天历史...'))
+      const sessions = await getSessions(process.env.ACCESS_TOKEN!, process.env.DEVICE_ID!)
+      const chatId = sessions[0].id
+      await getChatHistory(process.env.ACCESS_TOKEN!, process.env.DEVICE_ID!, chatId)
+
+      console.log(c.gray('  → 分享聊天结果...'))
+      await shareImage(process.env.ACCESS_TOKEN!, process.env.DEVICE_ID!, response as string)
+      await shareChat(process.env.ACCESS_TOKEN!, process.env.DEVICE_ID!, chatId)
 
       if (i < questions.length - 1) {
         const waitMinutes = getRandomElementFromArray(

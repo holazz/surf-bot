@@ -164,3 +164,72 @@ ${newsBlock}
 
   throw new Error('LLM request failed after max retries')
 }
+
+export async function getSessions(accessToken: string, deviceId: string) {
+  const res = await axios.get('https://api.asksurf.ai/muninn/v1/chat/sessions', {
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Origin': 'https://asksurf.ai',
+      'Referer': 'https://asksurf.ai/',
+      'x-device-id': deviceId,
+    },
+    params: {
+      limit: 10,
+      offset: 0,
+    },
+  })
+  return res.data.data.chat_sessions
+}
+
+export async function getChatHistory(accessToken: string, deviceId: string, chatId: string) {
+  const res = await axios.get(`https://api.asksurf.ai/muninn/v2/chat/sessions/${chatId}/history`, {
+    headers: {
+      'Origin': 'https://asksurf.ai',
+      'Referer': 'https://asksurf.ai/',
+      'Authorization': `Bearer ${accessToken}`,
+      'x-device-id': deviceId,
+    },
+  })
+  return res.data
+}
+
+export async function shareChat(accessToken: string, deviceId: string, chatId: string) {
+  const res = await axios.patch(
+    `https://api.asksurf.ai/muninn/v1/chat/sessions/${chatId}`,
+    {
+      is_public: true,
+    },
+    {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Origin': 'https://asksurf.ai',
+        'Referer': 'https://asksurf.ai/',
+        'x-device-id': deviceId,
+      },
+    },
+  )
+  return res.data
+}
+
+export async function shareImage(accessToken: string, deviceId: string, text: string) {
+  const res = await axios.post(
+    'https://api.asksurf.ai/muninn/v1/ner/extract',
+    {
+      text,
+    },
+    {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Origin': 'https://asksurf.ai',
+        'Referer': 'https://asksurf.ai/',
+        'x-device-id': deviceId,
+      },
+    },
+  )
+  return res.data
+}
+
+export async function getSharedHistory(chatId: string) {
+  const res = await axios.get(`https://api.asksurf.ai/muninn/v2/chat/sessions/${chatId}/shared-history`)
+  return res.data
+}
