@@ -237,7 +237,7 @@ export async function run() {
       .map(s => Number.parseInt(s.trim(), 10))
     const questionCount = getRandomElementFromArray(
       Array.from({ length: maxCount - minCount + 1 }, (_, i) => i + minCount),
-    )
+    )[0]
     const allQuestions = await getDailyQuestions(questionCount * 10)
     const questions = getRandomElementFromArray(allQuestions, questionCount)
     const [minInterval, maxInterval] = (process.env.QUESTION_INTERVAL_RANGE || '0,0')
@@ -280,7 +280,7 @@ export async function run() {
       if (i < questions.length - 1) {
         const waitMinutes = getRandomElementFromArray(
           Array.from({ length: maxInterval - minInterval + 1 }, (_, idx) => idx + minInterval),
-        )
+        )[0]
         if (waitMinutes > 0) {
           console.log(c.dim(`⏳ 等待 ${waitMinutes} 分钟后继续...`))
           await new Promise(resolve => setTimeout(resolve, waitMinutes * 60 * 1000))

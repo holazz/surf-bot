@@ -53,16 +53,12 @@ export function generateRequestId() {
   return result
 }
 
-export function getRandomElementFromArray<T>(array: readonly T[], count?: 1): T
-export function getRandomElementFromArray<T>(array: readonly T[], count: number): T[]
-export function getRandomElementFromArray<T>(array: readonly T[], count = 1): T | T[] {
+export function getRandomElementFromArray<T>(array: readonly T[], count = 1): T[] {
   if (!array.length || count > array.length)
-    return array?.length === 1 ? array[0] : [...array]
+    return [...array]
 
   const shuffled = [...array].sort(() => Math.random() - 0.5)
-  const result = shuffled.slice(0, Math.max(1, Math.floor(count)))
-
-  return result.length === 1 ? result[0] : result
+  return shuffled.slice(0, Math.max(1, Math.floor(count)))
 }
 
 export function sleep(ms: number) {
