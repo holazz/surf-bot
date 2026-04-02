@@ -95,6 +95,46 @@ export async function fetchReddit(limit: number): Promise<NewsItem[]> {
     })
 }
 
+export async function fetchMarsbit(limit: number): Promise<NewsItem[]> {
+  const res = await axios.get('https://api.marsbit.co/info/lives/showlives', {
+    params: {
+      currentPage: 1,
+      pageSize: limit,
+      channelId: 0,
+      lang: 'zh-CN',
+    },
+  })
+
+  const articles: any[] = res.data?.obj?.inforList ?? []
+
+  return articles.slice(0, limit).map((a: any) => {
+    // 从 HTML content 中提取文本，移除 <p> 标签
+    const contentHtml = a.content ?? ''
+    const textContent = contentHtml.replace(/<[^>]+>/g, '').trim()
+
+    // 提取标题：在【】中的内容
+    const titleMatch = textContent.match(/【([^】]+)】/)
+    const title = titleMatch ? titleMatch[1] : textContent.slice(0, 100)
+
+    // 正文是标题后的内容（去掉"火星财经消息，"前缀）
+    let body = textContent
+    if (titleMatch) {
+      body = textContent.replace(/【[^】]+】/, '').trim()
+    }
+    // 去掉"火星财经消息，"或"火星财经消息 "前缀
+    body = body.replace(/^火星财经消息[，,\s]*/, '').trim()
+
+    return {
+      title,
+      body,
+      url: a.url || `https://www.marsbit.co/live/${a.id}`,
+      source: 'MarsBit',
+      published_at: a.createdTime ? new Date(a.createdTime).toISOString() : new Date().toISOString(),
+      categories: 'Blockchain',
+    }
+  })
+}
+
 export async function generateHotQuestions(
   llm: {
     apiKey: string

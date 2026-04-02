@@ -5,8 +5,9 @@ import ora from 'ora'
 import c from 'picocolors'
 import WebSocket from 'ws'
 import {
-  fetchCryptoCompare,
-  fetchPANews,
+  // fetchCryptoCompare,
+  // fetchPANews,
+  fetchMarsbit,
   fetchReddit,
   generateHotQuestions,
   getChatHistory,
@@ -42,24 +43,34 @@ async function getDailyQuestions(count = 1): Promise<string[]> {
   console.log(c.cyan(`\n📡 区块链每日热点问题搜集 — ${date}\n`))
   const allNews: NewsItem[] = []
 
-  try {
-    console.log(c.gray('  → 获取 CryptoCompare 新闻...'))
-    const news = await retry(fetchCryptoCompare, 3)(50)
-    allNews.push(...news)
-    console.log(c.green(`  ✓ CryptoCompare: ${news.length} 篇`))
-  }
-  catch {
-    console.log(c.yellow('  ⚠ CryptoCompare 新闻获取失败，跳过'))
-  }
+  // try {
+  //   console.log(c.gray('  → 获取 CryptoCompare 新闻...'))
+  //   const news = await retry(fetchCryptoCompare, 3)(50)
+  //   allNews.push(...news)
+  //   console.log(c.green(`  ✓ CryptoCompare: ${news.length} 篇`))
+  // }
+  // catch {
+  //   console.log(c.yellow('  ⚠ CryptoCompare 新闻获取失败，跳过'))
+  // }
+
+  // try {
+  //   console.log(c.gray('  → 获取 PANews 新闻...'))
+  //   const paNews = await retry(fetchPANews, 3)(50)
+  //   allNews.push(...paNews)
+  //   console.log(c.green(`  ✓ PANews: ${paNews.length} 篇`))
+  // }
+  // catch {
+  //   console.log(c.yellow('  ⚠ PANews 新闻获取失败，跳过'))
+  // }
 
   try {
-    console.log(c.gray('  → 获取 PANews 新闻...'))
-    const paNews = await retry(fetchPANews, 3)(50)
-    allNews.push(...paNews)
-    console.log(c.green(`  ✓ PANews: ${paNews.length} 篇`))
+    console.log(c.gray('  → 获取 MarsBit 新闻...'))
+    const marsbit = await retry(fetchMarsbit, 3)(50)
+    allNews.push(...marsbit)
+    console.log(c.green(`  ✓ MarsBit: ${marsbit.length} 篇`))
   }
   catch {
-    console.log(c.yellow('  ⚠ PANews 新闻获取失败，跳过'))
+    console.log(c.yellow('  ⚠ MarsBit 新闻获取失败，跳过'))
   }
 
   try {
